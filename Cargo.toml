@@ -1,0 +1,12 @@
+[package]
+name = "aoc-2024"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "puzzle-1"
+[[bin]]
+name = "puzzle-2"
+[[bin]]
+name = "puzzle-3"
+[dependencies]
