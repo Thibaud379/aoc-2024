@@ -68,7 +68,7 @@ fn parse_input(lines: std::io::Lines<BufReader<File>>) -> Result<PuzzleData, Str
         })
         .into_iter()
         .map(|mut v| {
-            v.sort();
+            v.sort_unstable();
             v
         })
         .collect::<Vec<_>>();
@@ -80,7 +80,7 @@ fn parse_input(lines: std::io::Lines<BufReader<File>>) -> Result<PuzzleData, Str
         })
         .into_iter()
         .map(|mut v| {
-            v.sort();
+            v.sort_unstable();
             v
         })
         .collect::<Vec<_>>();
@@ -191,7 +191,7 @@ struct Guard {
 enum StepKind {
     Forward(Guard),
     Rotate(Guard),
-    OOB,
+    Oob,
 }
 
 fn next_step(guard: &Guard, data: &PuzzleData) -> StepKind {
@@ -211,7 +211,7 @@ fn next_step(guard: &Guard, data: &PuzzleData) -> StepKind {
                     dir: Dir::Up,
                 })
             } else {
-                StepKind::OOB
+                StepKind::Oob
             }
         }
         Dir::Down => {
@@ -229,7 +229,7 @@ fn next_step(guard: &Guard, data: &PuzzleData) -> StepKind {
                     dir: Dir::Down,
                 })
             } else {
-                StepKind::OOB
+                StepKind::Oob
             }
         }
         Dir::Left => {
@@ -247,7 +247,7 @@ fn next_step(guard: &Guard, data: &PuzzleData) -> StepKind {
                     dir: Dir::Left,
                 })
             } else {
-                StepKind::OOB
+                StepKind::Oob
             }
         }
         Dir::Right => {
@@ -265,18 +265,19 @@ fn next_step(guard: &Guard, data: &PuzzleData) -> StepKind {
                     dir: Dir::Right,
                 })
             } else {
-                StepKind::OOB
+                StepKind::Oob
             }
         }
     }
 }
 
-fn part2(mut data: PuzzleData) -> u64 {
+fn part2(data: PuzzleData) -> u64 {
+    const LOOP_SIZE: usize = 100_000;
+
     let mut guard = Guard {
         pos: data.start,
         dir: Dir::Up,
     };
-    let mut positions: Vec<(Dir, (usize, usize))> = Vec::new();
     let mut possible_obstacles = HashSet::new();
     loop {
         match next_step(&guard, &data) {
@@ -285,18 +286,18 @@ fn part2(mut data: PuzzleData) -> u64 {
                 guard = new_guard;
             }
             StepKind::Rotate(new_guard) => guard = new_guard,
-            StepKind::OOB => break,
+            StepKind::Oob => break,
         };
     }
-    const LOOP_SIZE: usize = 100000;
+
     possible_obstacles.remove(&data.start);
     let mut obstacle_count = 0u64;
     for ob in &possible_obstacles {
         let mut n_data = data.clone();
         n_data.cols[ob.0].push(ob.1);
         n_data.lines[ob.1].push(ob.0);
-        n_data.cols[ob.0].sort();
-        n_data.lines[ob.1].sort();
+        n_data.cols[ob.0].sort_unstable();
+        n_data.lines[ob.1].sort_unstable();
 
         let mut guard = Guard {
             pos: data.start,
@@ -309,7 +310,7 @@ fn part2(mut data: PuzzleData) -> u64 {
                     guard = new_guard;
                 }
                 StepKind::Rotate(new_guard) => guard = new_guard,
-                StepKind::OOB => {
+                StepKind::Oob => {
                     obstacle_count -= 1;
                     break;
                 }
@@ -318,140 +319,4 @@ fn part2(mut data: PuzzleData) -> u64 {
     }
     dbg!(possible_obstacles.len());
     obstacle_count
-}
-
-trait InfoResult<T> {
-    fn into_info(self) -> (bool, T);
-}
-
-impl<T> InfoResult<T> for Result<T, T> {
-    fn into_info(self) -> (bool, T) {
-        match self {
-            Ok(i) => (true, i),
-            Err(i) => (false, i),
-        }
-    }
-}
-
-type InfoRes<T> = Result<T, T>;
-
-fn step(
-    curr_pos: (Dir, (usize, usize)),
-    lines: &Vec<Vec<usize>>,
-    cols: &Vec<Vec<usize>>,
-    width: usize,
-) -> Option<(Option<(usize, usize)>, Dir, (usize, usize))> {
-    let dir = curr_pos.0;
-    let guard = curr_pos.1;
-    let new_step = match dir {
-        Dir::Up => {
-            if cols[guard.0]
-                .binary_search(&guard.1.saturating_sub(1))
-                .is_ok()
-            {
-                Some((Dir::Right, guard, Some((guard.0, guard.1 - 1))))
-            } else if guard.1 > 0 {
-                Some((Dir::Up, (guard.0, guard.1 - 1), None))
-            } else {
-                None
-            }
-        }
-        Dir::Down => {
-            if cols[guard.0]
-                .binary_search(&guard.1.saturating_add(1))
-                .is_ok()
-            {
-                Some((Dir::Left, guard, Some((guard.0, guard.1 + 1))))
-            } else if guard.1 < width - 1 {
-                Some((Dir::Down, (guard.0, guard.1 + 1), None))
-            } else {
-                None
-            }
-        }
-        Dir::Left => {
-            if lines[guard.1]
-                .binary_search(&guard.0.saturating_sub(1))
-                .is_ok()
-            {
-                Some((Dir::Up, guard, Some((guard.0 - 1, guard.1))))
-            } else if guard.0 > 0 {
-                Some((Dir::Left, (guard.0 - 1, guard.1), None))
-            } else {
-                None
-            }
-        }
-        Dir::Right => {
-            if lines[guard.1]
-                .binary_search(&guard.0.saturating_add(1))
-                .is_ok()
-            {
-                Some((Dir::Down, guard, Some((guard.0 + 1, guard.1))))
-            } else if guard.0 < width - 1 {
-                Some((Dir::Right, (guard.0 + 1, guard.1), None))
-            } else {
-                None
-            }
-        }
-    };
-    new_step.and_then(|s| Some((s.2, s.0, s.1)))
-}
-
-fn next_pos(curr_pos: (Dir, (usize, usize)), data: &PuzzleData) -> InfoRes<(Dir, (usize, usize))> {
-    //3303
-    let mut dir = curr_pos.0;
-    let mut guard = curr_pos.1;
-    match dir {
-        Dir::Up => {
-            let obstacle = data.cols[guard.0].binary_search(&guard.1).unwrap_err();
-
-            let obstacle_y = if obstacle == 0 {
-                0
-            } else {
-                data.cols[guard.0][obstacle - 1] + 1
-            };
-            dir = Dir::Right;
-            guard.1 = obstacle_y;
-        }
-        Dir::Down => {
-            let obstacle = data.cols[guard.0].binary_search(&guard.1).unwrap_err();
-
-            let obstacle_y = if obstacle == data.cols[guard.0].len() {
-                data.width - 1
-            } else {
-                data.cols[guard.0][obstacle] - 1
-            };
-
-            dir = Dir::Left;
-            guard.1 = obstacle_y;
-        }
-        Dir::Left => {
-            let obstacle = data.lines[guard.1].binary_search(&guard.0).unwrap_err();
-
-            let obstacle_x = if obstacle == 0 {
-                0
-            } else {
-                data.lines[guard.1][obstacle - 1] + 1
-            };
-
-            dir = Dir::Up;
-            guard.0 = obstacle_x;
-        }
-        Dir::Right => {
-            let obstacle = data.lines[guard.1].binary_search(&guard.0).unwrap_err();
-
-            let obstacle_x = if obstacle == data.lines[guard.1].len() {
-                data.width - 1
-            } else {
-                data.lines[guard.1][obstacle] - 1
-            };
-
-            dir = Dir::Down;
-            guard.0 = obstacle_x;
-        }
-    }
-    if guard.0 == data.width - 1 || guard.0 == 0 || guard.1 == 0 || guard.1 == data.width - 1 {
-        Err((dir, guard))
-    } else {
-        Ok((dir, guard))
-    }
 }

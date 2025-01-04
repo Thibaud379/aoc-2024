@@ -1,9 +1,7 @@
 use std::{
-    collections::HashSet,
     env,
     fs::File,
     io::{BufRead, BufReader},
-    iter,
 };
 
 fn main() {
@@ -16,10 +14,7 @@ fn main() {
         eprintln!("Error reading `{}`", args[2]);
         return;
     };
-    let Ok(data) = parse_input(lines) else {
-        eprintln!("Error reading `{}`", args[2]);
-        return;
-    };
+    let data = parse_input(lines);
     let sum: u64 = match args[1].as_str() {
         "1" => part1(data),
         "2" => part2(data),
@@ -36,7 +31,7 @@ struct PuzzleData {
     eqs: Vec<(u64, Vec<u64>)>,
 }
 
-fn parse_input(lines: std::io::Lines<BufReader<File>>) -> Result<PuzzleData, String> {
+fn parse_input(lines: std::io::Lines<BufReader<File>>) -> PuzzleData {
     let eqs = lines
         .map(Result::unwrap)
         .map(|l| {
@@ -51,14 +46,14 @@ fn parse_input(lines: std::io::Lines<BufReader<File>>) -> Result<PuzzleData, Str
             )
         })
         .collect();
-    Ok(PuzzleData { eqs })
+    PuzzleData { eqs }
 }
 
 fn part1(data: PuzzleData) -> u64 {
     let mut total = 0;
     for eq in data.eqs {
         // println!("{eq:?}");
-        let p = 2 << (eq.1.len() - 1) - 1;
+        let p = 2 << ((eq.1.len() - 1) - 1);
         for i in 0..p {
             // print!("\t{} - ", i);
             let mut sum = eq.1[0];

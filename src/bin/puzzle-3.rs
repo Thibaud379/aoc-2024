@@ -72,15 +72,15 @@ fn part2(lines: std::io::Lines<BufReader<File>>) -> u64 {
             let mut s = l.as_str();
             let mut sum = 0;
             while let Some(idx) = s.find("mul(") {
-                let enables = (s.find("do()"), s.find("don't()"));
-                match enables {
+                let enable_tags = (s.find("do()"), s.find("don't()"));
+                match enable_tags {
                     (Some(d), Some(dont)) if dont < idx && d < idx => enabled = d > dont,
                     (_, Some(dont)) if dont < idx => enabled = false,
                     (Some(d), _) if d < idx => enabled = true,
                     _ => (),
                 }
 
-                println!("{enables:?} - {enabled}");
+                println!("{enable_tags:?} - {enabled}");
                 s = &s[(idx + 4)..];
                 if !enabled {
                     continue;

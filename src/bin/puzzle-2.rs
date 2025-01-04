@@ -33,8 +33,8 @@ fn check_levels<T: Iterator<Item = u64>>(levels: T) -> bool {
             if !(1..=3).contains(&level.abs_diff(p)) {
                 return false;
             }
-            if let None = dir {
-                dir = Some(level < p)
+            if dir.is_none() {
+                dir = Some(level < p);
             } else if dir.is_some_and(|d| d != (level < p)) {
                 return false;
             }
@@ -66,7 +66,7 @@ fn part2(lines: std::io::Lines<BufReader<File>>) -> u64 {
                 .map(str::parse::<u64>)
                 .map(Result::unwrap)
                 .collect::<Vec<_>>();
-            if check_levels(levels.iter().cloned()) {
+            if check_levels(levels.iter().copied()) {
                 return true;
             }
             let vars = vec![levels.clone(); levels.len()];

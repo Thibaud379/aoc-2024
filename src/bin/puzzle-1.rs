@@ -40,8 +40,8 @@ fn part1(lines: std::io::Lines<BufReader<File>>) -> u64 {
             acc.1.push(v[1]);
             acc
         });
-    left.sort();
-    right.sort();
+    left.sort_unstable();
+    right.sort_unstable();
     left.into_iter()
         .zip(right)
         .map(|(l, r)| l.abs_diff(r))

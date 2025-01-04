@@ -30,7 +30,7 @@ fn part1(lines: std::io::Lines<BufReader<File>>) -> u64 {
     let mut orderings: HashMap<u64, HashSet<u64>> = HashMap::new();
     let mut updates = Vec::new();
     for l in lines.map(Result::unwrap) {
-        if l.len() == 0 {
+        if l.is_empty() {
             continue;
         }
         match l.find('|') {
@@ -53,7 +53,7 @@ fn part1(lines: std::io::Lines<BufReader<File>>) -> u64 {
     for update in updates {
         let mut previous = HashSet::new();
         let mut ok = true;
-        for page in update.iter() {
+        for page in &update {
             println!("{previous:?}");
             if orderings
                 .get(page)
@@ -70,13 +70,13 @@ fn part1(lines: std::io::Lines<BufReader<File>>) -> u64 {
         if ok {
             let middle = update[update.len() / 2];
             println!("{middle}");
-            sum += middle
+            sum += middle;
         }
     }
     sum
 }
 
-fn swap_error(update: &mut Vec<u64>, orderings: &HashMap<u64, HashSet<u64>>) -> bool {
+fn swap_error(update: &mut [u64], orderings: &HashMap<u64, HashSet<u64>>) -> bool {
     let mut all_previous = vec![HashSet::new()];
     let mut error = (0, 0);
     let mut swapped = false;
@@ -84,7 +84,7 @@ fn swap_error(update: &mut Vec<u64>, orderings: &HashMap<u64, HashSet<u64>>) -> 
         let previous = all_previous.last_mut().unwrap();
         if orderings
             .get(page)
-            .map(|s| s.intersection(&previous).count())
+            .map(|s| s.intersection(previous).count())
             .is_none_or(|c| c == 0)
         {
             let mut c = previous.clone();
@@ -94,7 +94,7 @@ fn swap_error(update: &mut Vec<u64>, orderings: &HashMap<u64, HashSet<u64>>) -> 
             match all_previous.iter().rev().position(|p| {
                 orderings
                     .get(page)
-                    .map(|s| s.intersection(&p).count())
+                    .map(|s| s.intersection(p).count())
                     .is_none_or(|c| c == 0)
             }) {
                 Some(swap_to) => {
@@ -117,7 +117,7 @@ fn part2(lines: std::io::Lines<BufReader<File>>) -> u64 {
     let mut orderings: HashMap<u64, HashSet<u64>> = HashMap::new();
     let mut updates = Vec::new();
     for l in lines.map(Result::unwrap) {
-        if l.len() == 0 {
+        if l.is_empty() {
             continue;
         }
         match l.find('|') {
@@ -144,7 +144,7 @@ fn part2(lines: std::io::Lines<BufReader<File>>) -> u64 {
         while swap_error(&mut update, &orderings) {}
         let middle = update[update.len() / 2];
         println!("{middle}");
-        sum += middle
+        sum += middle;
     }
     sum
 }
