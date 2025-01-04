@@ -1,15 +1,18 @@
 use std::{
-    collections::HashSet,
+    collections::{HashMap, HashSet},
     env,
     fs::File,
     io::{BufRead, BufReader},
     iter,
+    ops::Sub,
 };
+
+use gcd::Gcd;
 
 fn main() {
     let args: Vec<String> = env::args().collect();
     if args.len() < 3 {
-        eprintln!("Not enough arguments\nUSAGE: PART ./puzzle-7.exe FILE\n\tWhere PART is one of `1` or `2`");
+        eprintln!("Not enough arguments\nUSAGE: PART ./puzzle-8.exe FILE\n\tWhere PART is one of `1` or `2`");
         return;
     }
     let Ok(lines) = File::open(args[2].clone()).map(|f| BufReader::new(f).lines()) else {
@@ -24,7 +27,7 @@ fn main() {
         "1" => part1(data),
         "2" => part2(data),
         _ => {
-            eprint!("Arguments invalid\nUSAGE: PART ./puzzle-7.exe FILE\n\tWhere PART must be one of `1` or `2`");
+            eprint!("Arguments invalid\nUSAGE: PART ./puzzle-8.exe FILE\n\tWhere PART must be one of `1` or `2`");
             return;
         }
     };
@@ -33,82 +36,116 @@ fn main() {
 
 #[derive(Clone, Debug)]
 struct PuzzleData {
-    eqs: Vec<(u64, Vec<u64>)>,
+    antennas: HashMap<char, Vec<(usize, usize)>>,
+    width: usize,
 }
 
 fn parse_input(lines: std::io::Lines<BufReader<File>>) -> Result<PuzzleData, String> {
-    let eqs = lines
-        .map(Result::unwrap)
-        .map(|l| {
-            let col = l.find(':').expect("input file to be well-formed");
-            (
-                l[..col].parse().unwrap(),
-                l[(col + 1)..]
-                    .split_ascii_whitespace()
-                    .map(str::parse)
-                    .map(Result::unwrap)
-                    .collect(),
-            )
-        })
-        .collect();
-    Ok(PuzzleData { eqs })
+    let mut antennas = HashMap::new();
+    let mut width_o = None;
+    lines.map(Result::unwrap).enumerate().for_each(|(y, l)| {
+        width_o.get_or_insert(l.len());
+        for (x, c) in l.chars().enumerate().filter(|v| v.1.ne(&'.')) {
+            antennas
+                .entry(c)
+                .and_modify(|v: &mut Vec<(usize, usize)>| v.push((x, y)))
+                .or_insert(vec![(x, y)]);
+        }
+        if width_o.is_some_and(|v| v <= y) {
+            eprintln!("oupsi a rect");
+        }
+    });
+    Ok(PuzzleData {
+        antennas,
+        width: width_o.unwrap(),
+    })
+}
+
+fn add(a: &(usize, usize), b: &(isize, isize)) -> Option<(usize, usize)> {
+    let res = (a.0.checked_add_signed(b.0), a.1.checked_add_signed(b.1));
+    res.0.and(res.1)?;
+    Some((res.0.unwrap(), res.1.unwrap()))
+}
+
+fn sub(a: &(usize, usize), b: &(isize, isize)) -> Option<(usize, usize)> {
+    let res = (a.0.checked_add_signed(-b.0), a.1.checked_add_signed(-b.1));
+    res.0.and(res.1)?;
+    Some((res.0.unwrap(), res.1.unwrap()))
+}
+
+fn diff(a: &(usize, usize), b: &(usize, usize)) -> (isize, isize) {
+    let res = (
+        (a.0 as isize).checked_sub_unsigned(b.0),
+        (a.1 as isize).checked_sub_unsigned(b.1),
+    );
+    (res.0.unwrap(), res.1.unwrap())
+}
+
+fn fits(a: &(usize, usize), size: usize) -> bool {
+    a.0 < size && a.1 < size
+}
+
+fn fits_o(a: &Option<(usize, usize)>, size: usize) -> bool {
+    a.is_some_and(|a| a.0 < size && a.1 < size)
 }
 
 fn part1(data: PuzzleData) -> u64 {
-    let mut total = 0;
-    for eq in data.eqs {
-        // println!("{eq:?}");
-        let p = 2 << (eq.1.len() - 1) - 1;
-        for i in 0..p {
-            // print!("\t{} - ", i);
-            let mut sum = eq.1[0];
-            for j in 0..(eq.1.len() - 1) {
-                // print!("{}:{}; ", j, (i >> j) % 2 == 0);
-                if (i >> j) % 2 == 0 {
-                    sum += eq.1[j + 1];
-                } else {
-                    sum *= eq.1[j + 1];
-                }
-            }
-            // print!("{sum:?}");
-            if sum == eq.0 {
-                total += eq.0;
-                println!();
-                break;
-            }
-            // println!();
+    let antenna_locs = data.antennas.values().fold(HashSet::new(), |mut acc, v| {
+        acc.extend(v.iter().cloned());
+        acc
+    });
+    let mut antinodes = HashSet::new();
+    for ants in data.antennas.values() {
+        for pair in ants
+            .iter()
+            .flat_map(|l| ants.iter().map(move |r| (l, r)))
+            .filter(|(x, y)| *x != *y)
+        {
+            let diff = diff(pair.0, pair.1);
+            let antis = vec![sub(pair.1, &diff), add(pair.0, &diff)];
+            antinodes.extend(
+                antis
+                    .into_iter()
+                    .filter(|o| o.is_some_and(|a| fits(&a, data.width)))
+                    .map(Option::unwrap),
+            );
         }
     }
-    total
+
+    antinodes.len() as u64
 }
 
 fn part2(data: PuzzleData) -> u64 {
-    let mut total = 0;
-    for eq in data.eqs {
-        // println!("{eq:?}");
-        let p = 3_usize.pow(eq.1.len() as u32 - 1);
-        for i in 0..p {
-            // print!("\t{} - ", i);
-            let mut sum = eq.1[0];
-            let mut r_i = i;
-            for j in 0..(eq.1.len() - 1) {
-                // print!("{}:{}; ", j, r_i % 3);
-                match r_i % 3 {
-                    0 => sum += eq.1[j + 1],
-                    1 => sum *= eq.1[j + 1],
-                    2 => sum = format!("{sum}{}", eq.1[j + 1]).parse().unwrap(),
-                    _ => unreachable!(),
-                }
-                r_i /= 3;
+    let antenna_locs = data.antennas.values().fold(HashSet::new(), |mut acc, v| {
+        acc.extend(v.iter().cloned());
+        acc
+    });
+    let mut antinodes = HashSet::new();
+    for ants in data.antennas.values() {
+        for pair in ants
+            .iter()
+            .flat_map(|l| ants.iter().map(move |r| (l, r)))
+            .filter(|(x, y)| *x != *y)
+        {
+            let diff = diff(pair.0, pair.1);
+            let diff_gcd = (diff.0.abs() as usize).gcd(diff.1.abs() as usize) as isize;
+            print!("{:?} - ", diff);
+            print!("{:?} - ", diff_gcd);
+            let diff = (diff.0 / diff_gcd, diff.1 / diff_gcd);
+            println!("{:?}", diff);
+            let mut antis = Vec::new();
+            let mut p = Some(pair.0.clone());
+            while fits_o(&p, data.width) {
+                antis.push(p.unwrap());
+                p = add(&p.unwrap(), &diff);
             }
-            // print!("{sum:?}");
-            if sum == eq.0 {
-                total += eq.0;
-                // println!();
-                break;
+            let mut p = Some(pair.1.clone());
+            while fits_o(&p, data.width) {
+                antis.push(p.unwrap());
+                p = sub(&p.unwrap(), &diff);
             }
-            // println!();
+            antinodes.extend(antis);
         }
     }
-    total
+    antinodes.len() as u64
 }

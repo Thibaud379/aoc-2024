@@ -20,3 +20,4 @@ name = "puzzle-7"
 [[bin]]
 name = "puzzle-8"
 [dependencies]
+gcd = "2.3.0"
