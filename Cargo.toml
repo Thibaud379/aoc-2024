@@ -15,4 +15,8 @@ name = "puzzle-4"
 name = "puzzle-5"
 [[bin]]
 name = "puzzle-6"
+[[bin]]
+name = "puzzle-7"
+[[bin]]
+name = "puzzle-8"
 [dependencies]
