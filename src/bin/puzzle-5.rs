@@ -8,7 +8,7 @@ use std::{
 fn main() {
     let args: Vec<String> = env::args().collect();
     if args.len() < 3 {
-        eprintln!("Not enough arguments\nUSAGE: PART ./puzzle-3.exe FILE\n\tWhere PART is one of `1` or `2`");
+        eprintln!("Not enough arguments\nUSAGE: PART ./puzzle-5.exe FILE\n\tWhere PART is one of `1` or `2`");
         return;
     }
     let Ok(lines) = File::open(args[2].clone()).map(|f| BufReader::new(f).lines()) else {
@@ -19,7 +19,7 @@ fn main() {
         "1" => part1(lines),
         "2" => part2(lines),
         _ => {
-            eprint!("Arguments invalid\nUSAGE: PART ./puzzle-3.exe FILE\n\tWhere PART must be one of `1` or `2`");
+            eprint!("Arguments invalid\nUSAGE: PART ./puzzle-5.exe FILE\n\tWhere PART must be one of `1` or `2`");
             return;
         }
     };
