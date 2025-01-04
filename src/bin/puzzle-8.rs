@@ -3,8 +3,6 @@ use std::{
     env,
     fs::File,
     io::{BufRead, BufReader},
-    iter,
-    ops::Sub,
 };
 
 use gcd::Gcd;
@@ -90,10 +88,6 @@ fn fits_o(a: &Option<(usize, usize)>, size: usize) -> bool {
 }
 
 fn part1(data: PuzzleData) -> u64 {
-    let antenna_locs = data.antennas.values().fold(HashSet::new(), |mut acc, v| {
-        acc.extend(v.iter().cloned());
-        acc
-    });
     let mut antinodes = HashSet::new();
     for ants in data.antennas.values() {
         for pair in ants
@@ -116,10 +110,6 @@ fn part1(data: PuzzleData) -> u64 {
 }
 
 fn part2(data: PuzzleData) -> u64 {
-    let antenna_locs = data.antennas.values().fold(HashSet::new(), |mut acc, v| {
-        acc.extend(v.iter().cloned());
-        acc
-    });
     let mut antinodes = HashSet::new();
     for ants in data.antennas.values() {
         for pair in ants
@@ -128,18 +118,18 @@ fn part2(data: PuzzleData) -> u64 {
             .filter(|(x, y)| *x != *y)
         {
             let diff = diff(pair.0, pair.1);
-            let diff_gcd = (diff.0.abs() as usize).gcd(diff.1.abs() as usize) as isize;
-            print!("{:?} - ", diff);
-            print!("{:?} - ", diff_gcd);
+            let diff_gcd = diff.0.unsigned_abs().gcd(diff.1.unsigned_abs()) as isize;
+            print!("{diff:?} - ");
+            print!("{diff_gcd:?} - ");
             let diff = (diff.0 / diff_gcd, diff.1 / diff_gcd);
-            println!("{:?}", diff);
+            println!("{diff:?}");
             let mut antis = Vec::new();
-            let mut p = Some(pair.0.clone());
+            let mut p = Some(*pair.0);
             while fits_o(&p, data.width) {
                 antis.push(p.unwrap());
                 p = add(&p.unwrap(), &diff);
             }
-            let mut p = Some(pair.1.clone());
+            let mut p = Some(*pair.1);
             while fits_o(&p, data.width) {
                 antis.push(p.unwrap());
                 p = sub(&p.unwrap(), &diff);

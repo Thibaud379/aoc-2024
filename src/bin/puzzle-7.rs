@@ -1,9 +1,7 @@
 use std::{
-    collections::HashSet,
     env,
     fs::File,
     io::{BufRead, BufReader},
-    iter,
 };
 
 fn main() {
@@ -58,7 +56,7 @@ fn part1(data: PuzzleData) -> u64 {
     let mut total = 0;
     for eq in data.eqs {
         // println!("{eq:?}");
-        let p = 2 << (eq.1.len() - 1) - 1;
+        let p = 2 << ((eq.1.len() - 1) - 1);
         for i in 0..p {
             // print!("\t{} - ", i);
             let mut sum = eq.1[0];

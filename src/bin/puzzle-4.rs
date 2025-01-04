@@ -10,8 +10,8 @@ static mut FILE: Option<String> = None;
 #[allow(static_mut_refs)]
 fn get_lines() -> Vec<String> {
     unsafe {
-        let Ok(buf) = File::open(FILE.clone().unwrap()).map(|f| BufReader::new(f)) else {
-            eprintln!("Error reading `{:?}`", FILE);
+        let Ok(buf) = File::open(FILE.clone().unwrap()).map(BufReader::new) else {
+            eprintln!("Error reading `{FILE:?}`");
             exit(-1);
         };
         buf.lines().map(Result::unwrap).collect::<Vec<_>>()
@@ -57,7 +57,7 @@ fn part1() -> u64 {
             |mut acc, (l_i, line)| {
                 line.chars().enumerate().for_each(|(i, c)| {
                     if i + l_i < 2 * width {
-                        acc[i + l_i].push(c)
+                        acc[i + l_i].push(c);
                     }
                 });
                 acc
@@ -72,7 +72,7 @@ fn part1() -> u64 {
             |mut acc, (l_i, line)| {
                 line.chars().enumerate().for_each(|(i, c)| {
                     if i + width >= l_i {
-                        acc[i + width - l_i - 1].push(c)
+                        acc[i + width - l_i - 1].push(c);
                     }
                 });
                 acc
@@ -103,7 +103,7 @@ fn part2() -> u64 {
             |mut acc, (l_i, line)| {
                 line.chars().enumerate().for_each(|(i, c)| {
                     if i + l_i < 2 * width {
-                        acc[i + l_i].push(c)
+                        acc[i + l_i].push(c);
                     }
                 });
                 acc
@@ -127,7 +127,7 @@ fn part2() -> u64 {
             |mut acc, (l_i, line)| {
                 line.chars().enumerate().for_each(|(i, c)| {
                     if i + width >= l_i {
-                        acc[i + width - l_i - 1].push(c)
+                        acc[i + width - l_i - 1].push(c);
                     }
                 });
                 acc
