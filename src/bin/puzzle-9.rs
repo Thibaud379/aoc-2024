@@ -1,5 +1,4 @@
 use std::{
-    collections::HashSet,
     env,
     fs::File as FileFs,
     io::{BufRead, BufReader},
@@ -117,9 +116,7 @@ fn part2(data: PuzzleData) -> u64 {
         file_id -= 1;
         let file = get_file(file_id);
         let Some(free_space) = frees
-            .iter_mut()
-            .filter(|f| f.size >= file.size && f.pos < file.pos)
-            .next()
+            .iter_mut().find(|f| f.size >= file.size && f.pos < file.pos)
         else {
             files.push(file.clone());
             continue;

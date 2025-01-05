@@ -1,9 +1,8 @@
 use std::{
     collections::{HashMap, HashSet},
-    convert::identity,
     env,
     fs::File as FileFs,
-    io::{self, BufRead, BufReader},
+    io::{BufRead, BufReader},
 };
 
 fn main() {
@@ -114,7 +113,7 @@ fn part1(data: PuzzleData) -> u64 {
                 for c in data
                     .surrounding(data.from_index(*v))
                     .into_iter()
-                    .filter_map(identity)
+                    .flatten()
                     .filter_map(|n| (n.0 == data.heights[*v] + 1).then_some(n.1))
                 {
                     new_v.push(data.from_coord(c));
@@ -140,10 +139,10 @@ fn part2(data: PuzzleData) -> u64 {
         last_visited.insert(start, 1u64);
         for i in 1..10 {
             let mut visited = HashMap::new();
-            for (index, visits) in last_visited.iter() {
+            for (index, visits) in &last_visited {
                 data.surrounding(data.from_index(*index))
                     .into_iter()
-                    .filter_map(identity)
+                    .flatten()
                     .filter_map(|n| (n.0 == i).then_some(n.1))
                     .for_each(|c| {
                         visited
@@ -158,5 +157,5 @@ fn part2(data: PuzzleData) -> u64 {
 
         scores += last_visited.iter().fold(0, |acc, v| acc + v.1);
     }
-    scores as u64
+    scores
 }
