@@ -1,10 +1,9 @@
-#![feature(linked_list_cursors)]
+// #![feature(linked_list_cursors)]
 use std::{
     collections::{HashMap, LinkedList},
     env,
     fs::File as FileFs,
     io::{BufRead, BufReader},
-    thread::current,
 };
 
 fn main() {
@@ -49,29 +48,29 @@ fn parse_input(lines: std::io::Lines<BufReader<FileFs>>) -> PuzzleData {
 
 fn part1(data: PuzzleData) -> u64 {
     let mut stones = LinkedList::from_iter(data.stones.into_iter());
-    for i in 0..25 {
-        // println!("i:= {stones:?}");
-        let mut c = stones.cursor_front_mut();
-        while c.index().is_some() {
-            // print!("{:?}:= ", c.current().unwrap());
-            let stone = *c.current().unwrap(); // while guard applies
-            if stone == 0 {
-                *c.current().unwrap() = 1;
-                // println!("{:?}", c.current().unwrap());
-            } else if stone.to_string().len() % 2 == 0 {
-                let s = stone.to_string();
-                let left = s[..(s.len() / 2)].parse().unwrap();
-                let right = s[(s.len() / 2)..].parse().unwrap();
-                c.insert_before(left);
-                *c.current().unwrap() = right;
-                // println!("{:?}", c.current().unwrap());
-            } else {
-                *c.current().unwrap() = stone * 2024;
-                // println!("{:?}", c.current().unwrap());
-            }
-            c.move_next();
-        }
-    }
+    // for _i in 0..25 {
+    //     // println!("i:= {stones:?}");
+    //     let mut c = stones.cursor_front_mut();
+    //     while c.index().is_some() {
+    //         // print!("{:?}:= ", c.current().unwrap());
+    //         let stone = *c.current().unwrap(); // while guard applies
+    //         if stone == 0 {
+    //             *c.current().unwrap() = 1;
+    //             // println!("{:?}", c.current().unwrap());
+    //         } else if stone.to_string().len() % 2 == 0 {
+    //             let s = stone.to_string();
+    //             let left = s[..(s.len() / 2)].parse().unwrap();
+    //             let right = s[(s.len() / 2)..].parse().unwrap();
+    //             c.insert_before(left);
+    //             *c.current().unwrap() = right;
+    //             // println!("{:?}", c.current().unwrap());
+    //         } else {
+    //             *c.current().unwrap() = stone * 2024;
+    //             // println!("{:?}", c.current().unwrap());
+    //         }
+    //         c.move_next();
+    //     }
+    // }
 
     stones.len() as u64
 }
