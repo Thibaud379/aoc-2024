@@ -47,7 +47,7 @@ fn parse_input(lines: std::io::Lines<BufReader<FileFs>>) -> PuzzleData {
 }
 
 fn part1(data: PuzzleData) -> u64 {
-    let mut stones = LinkedList::from_iter(data.stones.into_iter());
+    let stones = LinkedList::from_iter(data.stones);
     // for _i in 0..25 {
     //     // println!("i:= {stones:?}");
     //     let mut c = stones.cursor_front_mut();

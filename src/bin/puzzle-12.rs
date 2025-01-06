@@ -133,62 +133,58 @@ impl Edge {
     fn sub(&self, other: &Self) -> Vec<Self> {
         if !self.contains(other) {
             vec![Some(self.clone())]
-        } else {
-            if self.vertical {
-                if self.start.1 == other.start.1 {
-                    vec![Edge::new(
-                        (self.start.0, self.start.1 + other.len),
+        } else if self.vertical {
+            if self.start.1 == other.start.1 {
+                vec![Edge::new(
+                    (self.start.0, self.start.1 + other.len),
+                    (self.start.0, self.start.1 + self.len),
+                    self.orientation,
+                )]
+            } else if self.start.1 + self.len == other.start.1 + other.len {
+                vec![Edge::new(
+                    (self.start.0, self.start.1),
+                    (self.start.0, self.start.1 + self.len - other.len),
+                    self.orientation,
+                )]
+            } else {
+                vec![
+                    Edge::new(
+                        (self.start.0, self.start.1),
+                        (self.start.0, other.start.1),
+                        self.orientation,
+                    ),
+                    Edge::new(
+                        (self.start.0, other.start.1 + other.len),
                         (self.start.0, self.start.1 + self.len),
                         self.orientation,
-                    )]
-                } else if self.start.1 + self.len == other.start.1 + other.len {
-                    vec![Edge::new(
-                        (self.start.0, self.start.1),
-                        (self.start.0, self.start.1 + self.len - other.len),
-                        self.orientation,
-                    )]
-                } else {
-                    vec![
-                        Edge::new(
-                            (self.start.0, self.start.1),
-                            (self.start.0, other.start.1),
-                            self.orientation,
-                        ),
-                        Edge::new(
-                            (self.start.0, other.start.1 + other.len),
-                            (self.start.0, self.start.1 + self.len),
-                            self.orientation,
-                        ),
-                    ]
-                }
-            } else {
-                if self.start.0 == other.start.0 {
-                    vec![Edge::new(
-                        (self.start.0 + other.len, self.start.1),
-                        (self.start.0 + self.len, self.start.1),
-                        self.orientation,
-                    )]
-                } else if self.start.0 + self.len == other.start.0 + other.len {
-                    vec![Edge::new(
-                        (self.start.0, self.start.1),
-                        (self.start.0 + self.len - other.len, self.start.1),
-                        self.orientation,
-                    )]
-                } else {
-                    vec![
-                        Edge::new(
-                            (self.start.0, self.start.1),
-                            (other.start.0, self.start.1),
-                            self.orientation,
-                        ),
-                        Edge::new(
-                            (other.start.0 + other.len, self.start.1),
-                            (self.start.0 + self.len, self.start.1),
-                            self.orientation,
-                        ),
-                    ]
-                }
+                    ),
+                ]
             }
+        } else if self.start.0 == other.start.0 {
+            vec![Edge::new(
+                (self.start.0 + other.len, self.start.1),
+                (self.start.0 + self.len, self.start.1),
+                self.orientation,
+            )]
+        } else if self.start.0 + self.len == other.start.0 + other.len {
+            vec![Edge::new(
+                (self.start.0, self.start.1),
+                (self.start.0 + self.len - other.len, self.start.1),
+                self.orientation,
+            )]
+        } else {
+            vec![
+                Edge::new(
+                    (self.start.0, self.start.1),
+                    (other.start.0, self.start.1),
+                    self.orientation,
+                ),
+                Edge::new(
+                    (other.start.0 + other.len, self.start.1),
+                    (self.start.0 + self.len, self.start.1),
+                    self.orientation,
+                ),
+            ]
         }
         .into_iter()
         .flatten()
@@ -198,26 +194,22 @@ impl Edge {
     fn extend(&mut self, other: &Self) -> bool {
         if !self.extends(other) {
             return false;
-        } else {
-            if self.vertical {
-                if self.start.1 == other.start.1 + other.len {
-                    self.start = other.start;
-                    self.len += other.len;
-                } else if self.start.1 + self.len == other.start.1 {
-                    self.len += other.len;
-                } else {
-                    unreachable!()
-                }
+        } else if self.vertical {
+            if self.start.1 == other.start.1 + other.len {
+                self.start = other.start;
+                self.len += other.len;
+            } else if self.start.1 + self.len == other.start.1 {
+                self.len += other.len;
             } else {
-                if self.start.0 == other.start.0 + other.len {
-                    self.start = other.start;
-                    self.len += other.len;
-                } else if self.start.0 + self.len == other.start.0 {
-                    self.len += other.len;
-                } else {
-                    unreachable!()
-                }
-            };
+                unreachable!()
+            }
+        } else if self.start.0 == other.start.0 + other.len {
+            self.start = other.start;
+            self.len += other.len;
+        } else if self.start.0 + self.len == other.start.0 {
+            self.len += other.len;
+        } else {
+            unreachable!()
         }
         true
     }
@@ -313,20 +305,20 @@ fn part2(data: PuzzleData) -> u64 {
         let mut area = 1;
         let mut region_edges = Edge::plot_edges(data.index_to_coord(start));
         let mut to_visit = vec![start];
-        while !to_visit.is_empty() {
+        while let Some(p) = to_visit.pop() {
             // println!("{region_edges:?}");
-            let p = to_visit.pop().unwrap();
+            
             let new_plots = data
                 .surrounding(p)
                 .into_iter()
                 .filter_map(|(i, c)| (c.eq(&start_tag) && !region.contains(&i)).then_some(i))
                 .collect::<Vec<_>>();
-            new_plots.into_iter().for_each(|i| {
+            for i in new_plots {
                 to_visit.push(i);
                 region.insert(i);
                 area += 1;
                 add_plot(&mut region_edges, data.index_to_coord(i));
-            })
+            }
         }
         println!(
             "Region {}: {}*{}={}\n{:?}\n{:?}\n",
