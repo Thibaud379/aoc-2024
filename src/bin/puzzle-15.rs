@@ -4,8 +4,7 @@ use std::{
     fmt::Display,
     fs::File as FileFs,
     hash::RandomState,
-    io::{stdin, BufRead, BufReader},
-    ops::{Add, Mul, Rem},
+    io::{BufRead, BufReader},
 };
 
 fn main() {
@@ -124,9 +123,6 @@ struct PuzzleData {
 }
 
 impl PuzzleData {
-    fn coord_to_index(&self, coord: (usize, usize)) -> usize {
-        coord.0 + self.width * coord.1
-    }
     fn index_to_coord(&self, index: usize) -> (usize, usize) {
         (index % self.width, index / self.width)
     }
@@ -190,7 +186,6 @@ fn part1(mut data: PuzzleData) -> u64 {
     let width = data.width;
     for m in moves {
         let next = m.next(&data);
-        let curr = data.position.clone();
         match &data.terrain[next] {
             Tile::Wall => (),
             Tile::Free => data.position = next,
@@ -306,16 +301,7 @@ fn lines(terrain: &Vec<TileD>, height: usize) -> Vec<&[TileD]> {
     terrain.chunks(height * 2).collect::<Vec<_>>()
 }
 
-fn cols(terrain: &Vec<TileD>, height: usize) -> Vec<Vec<&TileD>> {
-    let mut res = vec![vec![&TileD::Free; height]; 2 * height];
-    for t in terrain.iter().enumerate() {
-        let coords = (t.0 % (height * 2), t.0 / (2 * height));
-        res[coords.1][coords.0] = t.1;
-    }
-    res.into_iter().collect()
-}
-
-fn part2(mut data: PuzzleData) -> u64 {
+fn part2(data: PuzzleData) -> u64 {
     let height = data.width;
     let width = height * 2;
     let mut terrain: Vec<TileD> = data
@@ -329,9 +315,9 @@ fn part2(mut data: PuzzleData) -> u64 {
         .collect();
     let moves = data.moves.clone();
     let mut position = data.position * 2;
-    let mut i = 0;
+    // let mut i = 0;
     for m in moves {
-        i += 1;
+        // i += 1;
         // if i % 50 == 0 {
         //     let mut s = String::new();
         //     stdin().read_line(&mut s).unwrap();
@@ -424,11 +410,11 @@ fn part2(mut data: PuzzleData) -> u64 {
                                 matches!(terrain[m.next_raw(*t, width)], TileD::Free)
                                     || matches!(terrain[m.next_raw(*t, width)], TileD::Wall)
                             });
-                            for (id, t_id) in left {
+                            for (_id, t_id) in left {
                                 tiles_to_move
                                     .extend([m.next_raw(t_id, width), m.next_raw(t_id, width) + 1]);
                             }
-                            for (id, t_id) in right {
+                            for (_id, t_id) in right {
                                 tiles_to_move
                                     .extend([m.next_raw(t_id, width), m.next_raw(t_id, width) - 1]);
                             }
