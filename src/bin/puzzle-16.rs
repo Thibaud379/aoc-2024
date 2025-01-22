@@ -285,8 +285,11 @@ fn part2(data: PuzzleData) -> u64 {
                 predecessors
                     .entry(new_path.1 .0)
                     .and_modify(|e| e.push(path.clone()));
-            } else if let Some(v) = paths_to_visit.iter().find(|e| e.1 .0 == new_path.1 .0) {
-            } else {
+            } else if paths_to_visit
+                .iter()
+                .find(|e| e.1 .0 == new_path.1 .0)
+                .is_none()
+            {
                 predecessors.insert(new_path.1 .0, vec![path.clone()]);
                 paths_to_visit.push(new_path);
             }
