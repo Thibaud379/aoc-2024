@@ -35,6 +35,10 @@ name = "puzzle-14"
 name = "puzzle-15"
 [[bin]]
 name = "puzzle-16"
+[[bin]]
+name = "puzzle-17"
+[[bin]]
+name = "puzzle-18"
 
 [dependencies]
 gcd = "2.3.0" # For puzzle 8
