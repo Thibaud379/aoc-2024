@@ -7,6 +7,7 @@ use std::{
     fs::File as FileFs,
     hash::RandomState,
     io::Read,
+    iter,
 };
 
 fn main() {
@@ -43,7 +44,7 @@ type PuzzleResult = usize;
 struct PuzzleData {
     patterns: Vec<String>,
     designs: Vec<String>,
-    seen_designs: HashMap<String, usize>,
+    combinations: HashMap<String, usize>,
 }
 
 fn parse_input(data: &str) -> PuzzleData {
@@ -57,9 +58,9 @@ fn parse_input(data: &str) -> PuzzleData {
         .collect();
     lines.next();
     let designs = lines.map(str::to_owned).collect();
-    let seen_designs = HashMap::new();
+    let combinations = HashMap::new();
     let mut d = PuzzleData {
-        seen_designs,
+        combinations,
         patterns: patterns.clone(),
         designs,
     };
@@ -72,74 +73,44 @@ fn parse_input(data: &str) -> PuzzleData {
 
 impl PuzzleData {
     fn is_possible(&mut self, design: &str) -> bool {
-        let s = design.to_string();
-        if self.patterns.contains(&s) {
-            return true;
-        }
-        if design.len() == 1 {
-            return false;
-        }
-        if let Some(v) = self.seen_designs.get(design) {
-            return *v == 1;
-        }
-        if !self.patterns.iter().any(|p| design.starts_with(p)) {
-            self.seen_designs.insert(s, 0);
-            return false;
-        }
-        let res = (1..design.len())
-            .any(|i| self.is_possible(&design[..i]) && self.is_possible(&design[i..]));
-        if res {
-            self.seen_designs.insert(s, 1);
-        }
-        res
+        self.combinations(design, 0, false) != 0
     }
 
     fn combinations(&mut self, design: &str, depth: usize, debug: bool) -> usize {
-        let indent = "\t".repeat(depth);
-        if debug {
-            println!("{indent}{design}");
-        }
+        let indent = " ".repeat(depth);
         let s = design.to_string();
-        let mut res: usize = 0;
+        if let Some(c) = self.combinations.get(design) {
+            if debug {
+                println!("{indent}FOUND {design}={c}");
+            }
+            return *c;
+        };
+        let mut c = 0;
         if self.patterns.contains(&s) {
-            res += 1;
-        }
-        if design.len() == 1 {
-            if debug {
-                println!("{indent}LEN {res}");
+            c += 1;
+        } else {
+            if design.len() == 0 {
+                return 1;
             }
-            return res;
-        }
-        if let Some(v) = self.seen_designs.get(design) {
-            if debug {
-                println!("{indent}PREV {v}");
+            if design.len() == 1 {
+                self.combinations.insert(design.to_string(), 0);
+                return 0;
             }
-            return *v;
         }
-
-        if !self.patterns.iter().any(|p| design.starts_with(p)) {
-            self.seen_designs.insert(s, 0);
+        let pats: Vec<String> = self
+            .patterns
+            .iter()
+            .filter(|p| p.len() < design.len() && design.starts_with(p.as_str()))
+            .cloned()
+            .collect();
+        for p in pats {
             if debug {
-                println!("{indent}START 0");
+                println!("{indent} PAT {p} IN {design}")
             }
-            return 0;
+            c += self.combinations(&design[p.len()..], depth + 1, debug);
         }
-
-        res += (1..design.len())
-            .map(|i| {
-                self.combinations(&design[..i], depth + 1, debug)
-                    * self.combinations(&design[i..], depth + 1, debug)
-            })
-            .max()
-            .unwrap();
-        if res > 0 {
-            self.seen_designs.insert(s, res);
-        }
-
-        if debug {
-            println!("{indent}{design}({res})");
-        }
-        res
+        self.combinations.insert(design.to_string(), c);
+        c
     }
 }
 
@@ -154,13 +125,20 @@ fn part1(mut data: PuzzleData) -> PuzzleResult {
 }
 fn part2(mut data: PuzzleData) -> PuzzleResult {
     let designs = data.designs.clone();
-    for d in &designs {
-        println!("{d} => {}", data.combinations(d, 0, true));
+    println!("Processed input");
+    let mut res = 0;
+    let possible: Vec<String> = designs
+        .into_iter()
+        .filter(|d| data.is_possible(d))
+        .collect();
+
+    for d in possible {
+        print!("{d} =>");
+        let h = data.combinations(d.as_str(), 0, false);
+        println!(" {}", h);
+        res += h;
     }
-    let res = designs
-        .iter()
-        .map(|d| data.combinations(d.as_str(), 0, false))
-        .sum();
+
     println!("{res}");
     res
 }
@@ -185,14 +163,12 @@ bbrgwb";
     fn test_1() {
         let mut data = parse_input(examples::EX_1);
 
-        assert!(matches!(part1(data), 6))
+        assert_eq!(part1(data), 6)
     }
     #[test]
     fn test_2() {
         let mut data = parse_input(examples::EX_1);
-        println!("{}\n", data.combinations("bgb", 0, true));
-        println!("{}\n", data.combinations("gbr", 0, true));
-        println!("{}\n", data.combinations("bgbr", 0, true));
-        // assert!(matches!(part2(data), 16));
+        println!("{:?}", data.combinations("bgrg", 0, false));
+        assert!(matches!(part2(data), 16));
     }
 }
