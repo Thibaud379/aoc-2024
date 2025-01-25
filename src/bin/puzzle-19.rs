@@ -1,13 +1,9 @@
 #![allow(dead_code)]
 use std::{
-    cmp::Reverse,
-    collections::{BinaryHeap, HashMap, HashSet},
-    convert::identity,
+    collections::HashMap,
     env,
     fs::File as FileFs,
-    hash::RandomState,
     io::Read,
-    iter,
 };
 
 fn main() {
@@ -33,9 +29,8 @@ fn main() {
         }
         _ => {
             eprint!("Arguments invalid\nUSAGE: PART ./puzzle-19.exe FILE\n\tWhere PART must be one of `1` or `2`");
-            return;
         }
-    };
+    }
 }
 
 type PuzzleResult = usize;
@@ -89,7 +84,7 @@ impl PuzzleData {
         if self.patterns.contains(&s) {
             c += 1;
         } else {
-            if design.len() == 0 {
+            if design.is_empty() {
                 return 1;
             }
             if design.len() == 1 {
@@ -105,7 +100,7 @@ impl PuzzleData {
             .collect();
         for p in pats {
             if debug {
-                println!("{indent} PAT {p} IN {design}")
+                println!("{indent} PAT {p} IN {design}");
             }
             c += self.combinations(&design[p.len()..], depth + 1, debug);
         }
@@ -135,7 +130,7 @@ fn part2(mut data: PuzzleData) -> PuzzleResult {
     for d in possible {
         print!("{d} =>");
         let h = data.combinations(d.as_str(), 0, false);
-        println!(" {}", h);
+        println!(" {h}");
         res += h;
     }
 
@@ -147,7 +142,7 @@ fn part2(mut data: PuzzleData) -> PuzzleResult {
 mod tests {
     use crate::*;
     mod examples {
-        pub const EX_1: &'static str = "r, wr, b, g, bwu, rb, gb, br
+        pub const EX_1: &str = "r, wr, b, g, bwu, rb, gb, br
 
 brwrr
 bggr
@@ -161,9 +156,9 @@ bbrgwb";
 
     #[test]
     fn test_1() {
-        let mut data = parse_input(examples::EX_1);
+        let data = parse_input(examples::EX_1);
 
-        assert_eq!(part1(data), 6)
+        assert_eq!(part1(data), 6);
     }
     #[test]
     fn test_2() {

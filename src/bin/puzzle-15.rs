@@ -218,14 +218,11 @@ fn part1(mut data: PuzzleData) -> u64 {
                                 }
                             }
                         }
-                        match empty_spot {
-                            Some(i) => {
-                                *col[i] = Tile::Box;
-                                *col[next / width] = Tile::Free;
+                        if let Some(i) = empty_spot {
+                            *col[i] = Tile::Box;
+                            *col[next / width] = Tile::Free;
 
-                                data.position = next;
-                            }
-                            None => (),
+                            data.position = next;
                         }
                     }
                     Dir::Right | Dir::Left => {
@@ -254,13 +251,10 @@ fn part1(mut data: PuzzleData) -> u64 {
                                 }
                             }
                         }
-                        match empty_spot {
-                            Some(i) => {
-                                row[i] = Tile::Box;
-                                row[next % width] = Tile::Free;
-                                data.position = next;
-                            }
-                            None => (),
+                        if let Some(i) = empty_spot {
+                            row[i] = Tile::Box;
+                            row[next % width] = Tile::Free;
+                            data.position = next;
                         }
                     }
                 }
@@ -392,7 +386,7 @@ fn part2(data: PuzzleData) -> u64 {
                         }) {
                             let left: Vec<_> = tiles_to_move
                                 .iter()
-                                .cloned()
+                                .copied()
                                 .enumerate()
                                 .filter(|t| {
                                     matches!(terrain[m.next_raw(t.1, width)], TileD::BoxLeft)
@@ -400,7 +394,7 @@ fn part2(data: PuzzleData) -> u64 {
                                 .collect();
                             let right: Vec<_> = tiles_to_move
                                 .iter()
-                                .cloned()
+                                .copied()
                                 .enumerate()
                                 .filter(|t| {
                                     matches!(terrain[m.next_raw(t.1, width)], TileD::BoxRight)
@@ -430,7 +424,7 @@ fn part2(data: PuzzleData) -> u64 {
                         {
                             position = next;
                             let mut tiles: Vec<_> = all_tiles.into_iter().collect();
-                            tiles.sort();
+                            tiles.sort_unstable();
                             if matches!(m, Dir::Down) {
                                 tiles.reverse();
                             }
@@ -465,7 +459,7 @@ fn part2(data: PuzzleData) -> u64 {
     for line in lines(&terrain, height).into_iter().enumerate() {
         for t in line
             .1
-            .into_iter()
+            .iter()
             .enumerate()
             .filter(|t| matches!(t.1, TileD::BoxLeft))
         {

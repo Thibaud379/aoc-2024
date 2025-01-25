@@ -23,7 +23,7 @@ fn main() {
             return;
         }
     };
-    println!("Got result `{}`!", res);
+    println!("Got result `{res}`!");
 }
 
 #[allow(non_camel_case_types)]
@@ -32,12 +32,12 @@ type PuzzleResult = String;
 type RegType = u64;
 
 fn print_result(res: &Vec<u3>) -> String {
-    let mut r = res.into_iter().fold(String::new(), |mut acc: String, d| {
+    let mut r = res.iter().fold(String::new(), |mut acc: String, d| {
         acc.push_str(&d.to_string());
         acc.push(',');
         acc
     });
-    if r.len() > 0 {
+    if !r.is_empty() {
         r.remove(r.len() - 1);
     }
     r
@@ -166,7 +166,7 @@ impl Vm {
     }
     fn combo(&self, operand: u3) -> u64 {
         match operand {
-            0..=3 => operand as u64,
+            0..=3 => u64::from(operand),
             4 => self.reg_a(),
             5 => self.reg_b(),
             6 => self.reg_c(),
@@ -182,7 +182,7 @@ impl Vm {
         let mut move_pc = true;
         match op.code {
             OpCode::Bxl => {
-                *self.reg_b_mut() = self.reg_b() ^ operand as u64;
+                *self.reg_b_mut() = self.reg_b() ^ u64::from(operand);
             }
             OpCode::Bxc => {
                 *self.reg_b_mut() = self.reg_b() ^ self.reg_c();
@@ -243,7 +243,11 @@ fn part2(data: PuzzleData) -> PuzzleResult {
                 *vm.reg_a_mut() = a | (past_a << 3);
                 vm.run();
 
-                if vm.out[..(i + 1)] == goal[goal.len() - 1 - i..] {
+                if vm
+                    .out
+                    .get(..=i)
+                    .is_some_and(|v| *v == goal[goal.len() - 1 - i..])
+                {
                     past_as.push((past_a << 3) + a);
                 }
                 println!("a: {} | out: {}", a | (past_a << 3), print_result(&vm.out));
@@ -258,18 +262,18 @@ fn part2(data: PuzzleData) -> PuzzleResult {
 mod tests {
     use crate::*;
 
-    const EX_1: &'static str = "Register A: 729
+    const EX_1: &str = "Register A: 729
 Register B: 0
 Register C: 0
 
 Program: 0,1,5,4,3,0";
 
-    const EX_2: &'static str = "Register A: 2024
+    const EX_2: &str = "Register A: 2024
 Register B: 0
 Register C: 0
 
 Program: 0,1,5,4,3,0";
-    const EX_3: &'static str = "Register A: 2024
+    const EX_3: &str = "Register A: 2024
 Register B: 0
 Register C: 0
 
@@ -286,6 +290,6 @@ Program: 0,3,5,4,3,0";
     #[test]
     fn test_2() {
         let data_3 = parse_input(EX_3);
-        assert_eq!(part2(data_3), "117440");
+        assert_eq!(part2(data_3), "Some(117440)");
     }
 }

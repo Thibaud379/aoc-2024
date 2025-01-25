@@ -102,7 +102,7 @@ impl PuzzleData {
         }
         .into_iter()
         .filter(|p| self.walls.binary_search(&p.1 .0).is_err())
-        .map(|v| v.into())
+        .map(std::convert::Into::into)
         .collect()
     }
 
@@ -242,7 +242,7 @@ fn parse_input(lines: std::io::Lines<BufReader<FileFs>>) -> PuzzleData {
                 .collect::<Vec<_>>()
         })
         .collect();
-    walls.sort();
+    walls.sort_unstable();
     PuzzleData { walls, start, end }
 }
 
@@ -260,10 +260,8 @@ fn part1(data: PuzzleData) -> u64 {
                 continue;
             }
         }
-        if p.1 .0 == data.end {
-            if p.0 < min {
-                min = p.0;
-            }
+        if p.1 .0 == data.end && p.0 < min {
+            min = p.0;
         }
         paths.extend(data.next_paths(&p));
         visited.push(p);
@@ -285,10 +283,8 @@ fn part2(data: PuzzleData) -> u64 {
                 predecessors
                     .entry(new_path.1 .0)
                     .and_modify(|e| e.push(path.clone()));
-            } else if paths_to_visit
-                .iter()
-                .find(|e| e.1 .0 == new_path.1 .0)
-                .is_none()
+            } else if !paths_to_visit
+                .iter().any(|e| e.1 .0 == new_path.1 .0)
             {
                 predecessors.insert(new_path.1 .0, vec![path.clone()]);
                 paths_to_visit.push(new_path);

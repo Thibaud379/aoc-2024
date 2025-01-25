@@ -129,7 +129,7 @@ fn part1(mut data: PuzzleData) -> u64 {
         }
     }
 
-    quadrants.into_iter().fold(1, |acc, v| acc * v) as u64
+    quadrants.into_iter().product::<i32>() as u64
 }
 
 fn part2(mut data: PuzzleData) -> u64 {

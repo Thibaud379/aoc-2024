@@ -2,7 +2,6 @@
 use std::{
     cmp::Reverse,
     collections::{BinaryHeap, HashMap, HashSet},
-    convert::identity,
     env,
     fs::File as FileFs,
     io::Read,
@@ -31,9 +30,8 @@ fn main() {
         }
         _ => {
             eprint!("Arguments invalid\nUSAGE: PART ./puzzle-18.exe FILE\n\tWhere PART must be one of `1` or `2`");
-            return;
         }
-    };
+    }
 }
 
 type PuzzleResult = Option<usize>;
@@ -76,7 +74,7 @@ impl PuzzleData {
             (node.1 < self.width - 1).then(|| (node.0, node.1 + 1)),
         ]
         .into_iter()
-        .filter_map(identity)
+        .flatten()
     }
 }
 
@@ -93,14 +91,11 @@ fn part1(data: &PuzzleData) -> (HashSet<(usize, usize)>, Option<usize>) {
     let mut predecessors = HashMap::new();
     while let Some(next) = to_visit.pop() {
         for n in data.neigbhours(next.1) {
-            if !data.fallen_bytes().contains(&n) {
-                if distance[n.0][n.1]
-                    .is_none_or(|v| v > distance[next.1 .0][next.1 .1].unwrap() + 1)
-                {
-                    distance[n.0][n.1] = Some(distance[next.1 .0][next.1 .1].unwrap() + 1);
-                    to_visit.push((Reverse(distance[next.1 .0][next.1 .1].unwrap() + 1), n));
-                    predecessors.insert(n, next.1);
-                }
+            if !data.fallen_bytes().contains(&n) && distance[n.0][n.1]
+                    .is_none_or(|v| v > distance[next.1 .0][next.1 .1].unwrap() + 1) {
+                distance[n.0][n.1] = Some(distance[next.1 .0][next.1 .1].unwrap() + 1);
+                to_visit.push((Reverse(distance[next.1 .0][next.1 .1].unwrap() + 1), n));
+                predecessors.insert(n, next.1);
             }
         }
         visited.insert(next.1);
@@ -141,7 +136,7 @@ fn part2(mut data: PuzzleData) -> (usize, usize) {
 mod tests {
     use crate::*;
     mod examples {
-        pub const EX_1: &'static str = "5,4
+        pub const EX_1: &str = "5,4
 4,2
 4,5
 3,0
@@ -173,13 +168,13 @@ mod tests {
         let mut data = parse_input(examples::EX_1);
         data.width = 7;
         data.fallen = 12;
-        assert!(matches!(part1(&data), (_, Some(22))))
+        assert!(matches!(part1(&data), (_, Some(22))));
     }
     #[test]
     fn test_2() {
         let mut data = parse_input(examples::EX_1);
         data.width = 7;
         data.fallen = 12;
-        assert_eq!(part2(data), (6, 1))
+        assert_eq!(part2(data), (6, 1));
     }
 }
